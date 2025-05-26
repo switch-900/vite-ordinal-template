@@ -1,16 +1,33 @@
 // Top toolbar component with main tool categories
 import React from 'react';
-import { useScene } from '../../state/sceneStore.jsx';
+import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 
 export const TopToolbar = () => {
-  const { viewMode, setSceneState } = useScene();
+  const { viewMode, setSceneState, selectedIds } = useScene();
+  const { clearSelection } = useSceneActions();
+
+  const handleModifyAction = (action) => {
+    switch(action) {
+      case 'Move':
+        setSceneState({ transformMode: 'translate' });
+        break;
+      case 'Rotate':
+        setSceneState({ transformMode: 'rotate' });
+        break;
+      case 'Scale':
+        setSceneState({ transformMode: 'scale' });
+        break;
+      default:
+        break;
+    }
+  };
 
   const toolCategories = [
     { name: 'File', icon: '📁', items: ['New', 'Open', 'Save', 'Export'] },
     { name: 'Edit', icon: '✏️', items: ['Undo', 'Redo', 'Copy', 'Paste'] },
     { name: 'View', icon: '👁️', items: ['2D', '3D', 'Grid', 'Wireframe'] },
     { name: 'Draw', icon: '✏️', items: ['Line', 'Rectangle', 'Circle', 'Polygon'] },
-    { name: 'Modify', icon: '🔧', items: ['Move', 'Rotate', 'Scale', 'Mirror'] },
+    { name: 'Modify', icon: '🔧', items: ['Move', 'Rotate', 'Scale', 'Mirror'], hasAction: true },
     { name: 'Tools', icon: '🛠️', items: ['Measure', 'Text', 'Dimension'] },
   ];
 
@@ -61,7 +78,13 @@ export const TopToolbar = () => {
               {category.items.map((item) => (
                 <button
                   key={item}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 first:rounded-t last:rounded-b"
+                  onClick={() => category.hasAction && handleModifyAction(item)}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors first:rounded-t last:rounded-b ${
+                    category.hasAction 
+                      ? 'text-gray-300 hover:bg-gray-700' 
+                      : 'text-gray-500 cursor-not-allowed'
+                  }`}
+                  disabled={!category.hasAction}
                 >
                   {item}
                 </button>

@@ -8,12 +8,22 @@ export const MaterialEditor = () => {
 
   const updateMaterial = (property, value) => {
     if (selectedObject) {
+      const currentMaterial = selectedObject.material || {};
+      
+      // Force refresh by creating a completely new material object
       updateObject(selectedObject.id, {
         material: {
-          ...selectedObject.material,
+          ...currentMaterial,
           [property]: value
         }
       });
+      
+      // Update mesh references in real-time
+      const meshElement = document.getElementById(`mesh-${selectedObject.id}`);
+      if (meshElement) {
+        // Force a re-render by toggling a class
+        meshElement.classList.toggle('material-update');
+      }
     }
   };
 
@@ -151,9 +161,14 @@ export const MaterialEditor = () => {
           <button
             className="px-2 py-1 bg-gray-700 text-white rounded text-xs hover:bg-gray-600"
             onClick={() => {
-              updateMaterial('color', '#808080');
-              updateMaterial('metalness', 0.0);
-              updateMaterial('roughness', 0.9);
+              // Apply plastic preset all at once
+              const newMaterial = {
+                ...selectedObject.material,
+                color: '#808080',
+                metalness: 0.0,
+                roughness: 0.9
+              };
+              updateObject(selectedObject.id, { material: newMaterial });
             }}
           >
             Plastic
@@ -161,9 +176,14 @@ export const MaterialEditor = () => {
           <button
             className="px-2 py-1 bg-gray-700 text-white rounded text-xs hover:bg-gray-600"
             onClick={() => {
-              updateMaterial('color', '#c0c0c0');
-              updateMaterial('metalness', 1.0);
-              updateMaterial('roughness', 0.2);
+              // Apply metal preset all at once
+              const newMaterial = {
+                ...selectedObject.material,
+                color: '#c0c0c0',
+                metalness: 1.0,
+                roughness: 0.2
+              };
+              updateObject(selectedObject.id, { material: newMaterial });
             }}
           >
             Metal
@@ -171,9 +191,14 @@ export const MaterialEditor = () => {
           <button
             className="px-2 py-1 bg-gray-700 text-white rounded text-xs hover:bg-gray-600"
             onClick={() => {
-              updateMaterial('color', '#8B4513');
-              updateMaterial('metalness', 0.0);
-              updateMaterial('roughness', 0.8);
+              // Apply wood preset all at once
+              const newMaterial = {
+                ...selectedObject.material,
+                color: '#8B4513',
+                metalness: 0.0,
+                roughness: 0.8
+              };
+              updateObject(selectedObject.id, { material: newMaterial });
             }}
           >
             Wood

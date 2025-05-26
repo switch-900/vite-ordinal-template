@@ -3,9 +3,12 @@ import React, { useRef } from 'react';
 import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 import { GizmoControls } from '../ui/GizmoControls';
 import { Geometry, Base, Addition, Subtraction, Intersection } from '@react-three/csg';
+import { boxelGeometry } from "boxels-shader";
+import CustomShaderMaterial from 'three-custom-shader-material';
+import * as THREE from "three";
 
 export const SceneRenderer = () => {
-  const { objects, selectedObjectId, selectedIds, layers, groups = [] } = useScene();
+  const { objects, selectedObjectId, selectedIds, layers, groups = [], transformMode } = useScene();
   const { selectObjects, toggleObjectSelection, clearSelection } = useSceneActions();
   const meshRefs = useRef({});
 
@@ -38,10 +41,9 @@ export const SceneRenderer = () => {
   };
 
   const handleCanvasClick = (event) => {
-    // Clear selection when clicking on empty space
-    if (event.target === event.currentTarget) {
-      clearSelection();
-    }
+    // Clear selection when clicking on the background plane
+    event.stopPropagation();
+    clearSelection();
   };
 
   // Get mesh reference for TransformGizmo
@@ -61,6 +63,8 @@ export const SceneRenderer = () => {
         return <planeGeometry args={args} />;
       case 'cone':
         return <coneGeometry args={args} />;
+      case 'boxel':
+        return boxelGeometry; // Boxel uses a pre-built geometry
       default:
         return <boxGeometry args={[1, 1, 1]} />;
     }
@@ -103,7 +107,36 @@ export const SceneRenderer = () => {
     );
   };
 
-  const getMaterial = (material, isSelected) => {
+  const getMaterial = (material, isSelected, isBoxel = false) => {
+    if (isBoxel) {
+      return (
+        <CustomShaderMaterial
+          baseMaterial={THREE.MeshStandardMaterial}
+          flatShading={true}
+          transparent={true}
+          uniforms={{time: {value: 0}}}
+          vertexShader={`
+            attribute float angle;
+            varying vec3 vPos;
+            varying vec3 vNormal;
+            void main() {
+              csm_Position += normal * 0.1 * 0.5;
+              vPos = csm_Position;
+              vNormal = normal;
+            }
+          `}
+          fragmentShader={`
+            varying vec3 vPos;
+            varying vec3 vNormal;
+            void main() {
+              vec3 color = ${isSelected ? 'vec3(1.0, 0.7, 0.0)' : 'vec3(1.0, 0.4, 0.0)'};
+              csm_DiffuseColor = vec4(color, 0.9);
+            }
+          `}
+        />
+      );
+    }
+    
     return (
       <meshStandardMaterial
         color={isSelected ? '#ffaa00' : material.color}
@@ -118,14 +151,46 @@ export const SceneRenderer = () => {
   };
 
   return (
-    <group onClick={handleCanvasClick}>
-      {visibleObjects.map((obj) => {
-        if (!obj.visible) return null;
-        
-        const isSelected = selectedIds.includes(obj.id);
-        
-        // Handle boolean objects differently
-        if (obj.type === 'boolean') {
+    <>
+      {/* Background plane for click handling */}
+      <mesh 
+        position={[0, -0.01, 0]} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        onClick={handleCanvasClick}
+        visible={false}
+      >
+        <planeGeometry args={[1000, 1000]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      
+      <group>
+        {visibleObjects.map((obj) => {
+          if (!obj.visible) return null;
+          
+          const isSelected = selectedIds.includes(obj.id);
+          
+          // Handle boolean objects differently
+          if (obj.type === 'boolean') {
+            return (
+              <mesh
+                key={obj.id}
+                ref={(ref) => {
+                  if (ref) {
+                    meshRefs.current[obj.id] = ref;
+                  }
+                }}
+                position={obj.position}
+                rotation={obj.rotation}
+                scale={obj.scale}
+                onClick={(e) => handleClick(obj.id, e)}
+              >
+                {getBooleanGeometry(obj)}
+                {getMaterial(obj.material, isSelected)}
+              </mesh>
+            );
+          }
+          
+          // Handle regular objects
           return (
             <mesh
               key={obj.id}
@@ -138,33 +203,15 @@ export const SceneRenderer = () => {
               rotation={obj.rotation}
               scale={obj.scale}
               onClick={(e) => handleClick(obj.id, e)}
+              geometry={obj.geometry === 'boxel' ? boxelGeometry : undefined}
             >
-              {getBooleanGeometry(obj)}
-              {getMaterial(obj.material, isSelected)}
+              {obj.geometry !== 'boxel' && getGeometry(obj.geometry, obj.geometryArgs)}
+              {getMaterial(obj.material, isSelected, obj.geometry === 'boxel')}
             </mesh>
           );
-        }
-        
-        // Handle regular objects
-        return (
-          <mesh
-            key={obj.id}
-            ref={(ref) => {
-              if (ref) {
-                meshRefs.current[obj.id] = ref;
-              }
-            }}
-            position={obj.position}
-            rotation={obj.rotation}
-            scale={obj.scale}
-            onClick={(e) => handleClick(obj.id, e)}
-          >
-            {getGeometry(obj.geometry, obj.geometryArgs)}
-            {getMaterial(obj.material, isSelected)}
-          </mesh>
-        );
-      })}
-      <GizmoControls selectedMesh={getSelectedMesh()} />
-    </group>
+        })}
+        <GizmoControls selectedMesh={getSelectedMesh()} />
+      </group>
+    </>
   );
 };

@@ -9,10 +9,11 @@ const primitives = [
   { name: 'Cylinder', icon: '🗜️', type: 'cylinder' },
   { name: 'Plane', icon: '▭', type: 'plane' },
   { name: 'Cone', icon: '🔺', type: 'cone' },
+  { name: 'Boxel', icon: '📦', type: 'boxel' },
 ];
 
 export const PrimitiveTools = () => {
-  const { addObject } = useSceneActions();
+  const { addObject, selectObjects } = useSceneActions();
   const createPrimitive = (type) => {
     const id = `${type}_${Date.now()}`;
     const position = [0, 0, 0];
@@ -35,6 +36,9 @@ export const PrimitiveTools = () => {
         break;
       case 'cone':
         geometryArgs = [0.5, 1, 32];
+        break;
+      case 'boxel':
+        geometryArgs = [1]; // Scale for boxel
         break;
       default:
         geometryArgs = [1, 1, 1];
@@ -60,6 +64,8 @@ export const PrimitiveTools = () => {
     };
 
     addObject(obj);
+    // Automatically select the newly created object
+    selectObjects([id]);
   };
 
   return (

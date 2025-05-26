@@ -18,13 +18,18 @@ export const BooleanOps = () => {
 
     const [firstObj, secondObj, ...restObjs] = selectedObjects;
     
+    // Calculate the center position of the selected objects
+    const positions = selectedObjects.map(obj => new THREE.Vector3(...obj.position));
+    const center = positions.reduce((acc, pos) => acc.add(pos), new THREE.Vector3()).divideScalar(positions.length);
+    
     // Create new boolean object
     const newObject = {
       id: `boolean_${Date.now()}`,
+      name: `Boolean_${operation}`,
       type: 'boolean',
       operation,
-      sourceObjects: selectedIds,
-      position: [0, 0, 0],
+      sourceObjects: selectedIds.slice(), // Use slice to create a copy
+      position: [center.x, center.y, center.z],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
       material: {

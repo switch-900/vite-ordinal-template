@@ -6,7 +6,6 @@ import {useScene} from "./state/sceneStore.jsx";
 import {useKeyboardShortcuts} from "./hooks/useKeyboardShortcuts.js";
 
 import {EnvironmentLighting} from "./components/core/EnvironmentLighting.jsx";
-import {TestBoxel} from "./components/TestBoxel.jsx";
 import {GridFloor} from "./components/GridFloor.jsx";
 // Tool components
 import {SketchCanvas} from "./components/tools/SketchCanvas.jsx";
@@ -30,21 +29,18 @@ export function App() {
 
         return (
             <>
+                {viewMode === '2d' && <SketchToolbar />}
                 {viewMode === '3d' && <ViewportToolbar />}
                 <Canvas dpr={1}>
                     <CameraManager />
                     <color attach="background" args={[0.02, 0.02, 0.022]} />
                     <Suspense>
                         {viewMode === '2d' ? (
-                          <>
-                            <SketchCanvas />
-                            <SketchToolbar />
-                          </>
+                          <SketchCanvas />
                         ) : (
                           <>
                             <EnvironmentLighting />
                             <SceneRenderer />
-                            <TestBoxel />
                             <GridFloor />
                             {window.innerWidth < 300 ? null : <Perf position={'bottom-left'} />}
                           </>
@@ -70,7 +66,6 @@ export function App() {
             <Scene/>
             <Leva hidden={window.innerWidth < 300} />
             <BoxelInfo />
-            <ViewportToolbar />
         </MainLayout>
     )
 }
