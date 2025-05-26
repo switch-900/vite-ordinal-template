@@ -83,18 +83,12 @@ export const useSceneActions = () => {
   const { setSceneState } = useScene();
 
   const addObject = useCallback((obj) => {
-    console.log('useSceneActions.addObject called with:', obj);
     // Assign to default layer if no layer specified
     if (!obj.layerId) {
       obj.layerId = 'default';
     }
-    // saveStateForUndo(`Add ${obj.type || obj.geometry}`); // Temporarily disabled
-    setSceneState((prev) => {
-      console.log('Previous objects:', prev.objects);
-      const newObjects = [...prev.objects, obj];
-      console.log('New objects:', newObjects);
-      return { objects: newObjects };
-    });
+    saveStateForUndo(`Add ${obj.type || obj.geometry}`);
+    setSceneState((prev) => ({ objects: [...prev.objects, obj] }));
   }, [setSceneState]);
 
   const selectObjects = useCallback((ids) => {
@@ -123,7 +117,7 @@ export const useSceneActions = () => {
   }, [setSceneState]);
 
   const updateObject = useCallback((id, updates) => {
-    // saveStateForUndo(`Update object`); // Temporarily disabled
+    saveStateForUndo(`Update object`);
     setSceneState((prev) => ({
       objects: prev.objects.map(obj =>
         obj.id === id ? { ...obj, ...updates } : obj
@@ -132,7 +126,7 @@ export const useSceneActions = () => {
   }, [setSceneState]);
 
   const deleteObject = useCallback((id) => {
-    // saveStateForUndo(`Delete object`); // Temporarily disabled
+    saveStateForUndo(`Delete object`);
     setSceneState((prev) => ({
       objects: prev.objects.filter(obj => obj.id !== id),
       selectedIds: prev.selectedIds.filter(selectedId => selectedId !== id),

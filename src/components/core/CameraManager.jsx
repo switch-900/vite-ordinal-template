@@ -1,5 +1,5 @@
 // filepath: src/components/core/CameraManager.jsx
-import React, { useRef, Suspense } from 'react';
+import React, { useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrthographicCamera, PerspectiveCamera, CameraControls } from '@react-three/drei';
 import { useScene } from '../../state/sceneStore.jsx';
@@ -8,14 +8,6 @@ export const CameraManager = () => {
   const orthoRef = useRef();
   const perspRef = useRef();
   const { viewMode } = useScene();
-  const { gl } = useThree();
-
-  console.log('CameraManager render - viewMode:', viewMode);
-
-  // Make sure we have a valid gl context before rendering controls
-  const canRenderControls = gl && gl.domElement;
-
-  console.log('CameraManager - canRenderControls:', canRenderControls);
 
   return (
     <>
@@ -32,11 +24,7 @@ export const CameraManager = () => {
         fov={45}
         position={[5, 5, 5]}
       />
-      {viewMode === '3d' && canRenderControls && (
-        <Suspense fallback={null}>
-          <CameraControls makeDefault={false} />
-        </Suspense>
-      )}
+      {viewMode === '3d' && <CameraControls makeDefault={false} />}
     </>
   );
 };

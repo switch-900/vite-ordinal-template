@@ -1,158 +1,96 @@
-import {Canvas} from "@react-three/fiber";
+import {Canvas, useThree} from "@react-three/fiber";
 import {Suspense, useState} from "react";
-import {useScene, useSceneActions} from "./state/sceneStore.jsx";
+import {Perf} from "r3f-perf";
+import {CameraManager} from "./components/core/CameraManager.jsx";
+import {useScene} from "./state/sceneStore.jsx";
 import {useKeyboardShortcuts} from "./hooks/useKeyboardShortcuts.js";
 
+import {EnvironmentLighting} from "./components/core/EnvironmentLighting.jsx";
+import {TestBoxel} from "./components/TestBoxel.jsx";
 import {GridFloor} from "./components/GridFloor.jsx";
+// Tool components
 import {SketchCanvas} from "./components/tools/SketchCanvas.jsx";
 import {SketchToolbar} from "./components/tools/SketchToolbar.jsx";
+import {PrimitiveTools} from "./components/tools/PrimitiveTools.jsx";
+import {AdvancedTools} from "./components/tools/AdvancedTools.jsx";
+import {BooleanOps} from "./components/tools/BooleanOps.jsx";
+import {ExtrudeRevolve} from "./components/tools/ExtrudeRevolve.jsx";
 import {SceneRenderer} from "./components/core/SceneRenderer.jsx";
 import {Leva} from "leva";
 import {BoxelInfo} from "./components/ui/BoxelInfo.jsx";
-import {LevaInterface} from "./components/ui/LevaInterface.jsx";
-import {DebugInfo} from "./components/DebugInfo.jsx";
+import {ObjectManager} from "./components/ui/ObjectManager.jsx";
+import {ExportPanel} from "./components/ui/ExportPanel.jsx";
+import {TransformToolbar} from "./components/ui/TransformToolbar.jsx";
+import {MaterialEditor} from "./components/ui/MaterialEditor.jsx";
+import {SettingsPanel} from "./components/ui/SettingsPanel.jsx";
+import {UndoRedoToolbar} from "./components/ui/UndoRedoToolbar.jsx";
+import {LayerManager} from "./components/ui/LayerManager.jsx";
+import {GroupManager} from "./components/ui/GroupManager.jsx";
+import {PerformancePanel} from "./components/ui/PerformancePanel.jsx";
+import {TextureManager} from "./components/ui/TextureManager.jsx";
+import {OrdinalsExporter} from "./components/ui/OrdinalsExporter.jsx";
+import {ConstraintSystem} from "./components/tools/ConstraintSystem.jsx";
+import {AnimationPanel} from "./components/ui/AnimationPanel.jsx";
 import {ViewerApp} from "./ViewerApp.jsx";
-import {CameraControls} from "@react-three/drei";
 
 export function App() {
-    const [appMode, setAppMode] = useState('builder');
+    const [appMode, setAppMode] = useState('builder'); // 'builder' or 'viewer'
     const [viewerSceneData, setViewerSceneData] = useState(null);
 
     // Enable keyboard shortcuts
     useKeyboardShortcuts();
 
     const Scene = () => {
-        const { viewMode, setSceneState } = useScene();
-        const { addObject } = useSceneActions();
-
-        const testAddObject = () => {
-            console.log('Test button clicked - adding object');
-            const testObj = {
-                id: `test_${Date.now()}`,
-                name: `Test Object`,
-                type: 'mesh',
-                geometry: 'box',
-                geometryArgs: [1, 1, 1],
-                material: {
-                    type: 'standard',
-                    color: '#00ff00',
-                    metalness: 0.1,
-                    roughness: 0.7,
-                },
-                position: [0, 0, 0],
-                rotation: [0, 0, 0],
-                scale: [1, 1, 1],
-                visible: true,
-                locked: false,
-                layerId: 'default'
-            };
-            console.log('Adding test object:', testObj);
-            addObject(testObj);
-        };
-
-        const testAddSphere = () => {
-            console.log('Adding sphere test');
-            const sphereObj = {
-                id: `sphere_${Date.now()}`,
-                name: `Test Sphere`,
-                type: 'mesh',
-                geometry: 'sphere',
-                geometryArgs: [0.5, 16, 16],
-                material: {
-                    type: 'standard',
-                    color: '#ff0000',
-                    metalness: 0.1,
-                    roughness: 0.7,
-                },
-                position: [1, 0, 0],
-                rotation: [0, 0, 0],
-                scale: [1, 1, 1],
-                visible: true,
-                locked: false,
-                layerId: 'default'
-            };
-            console.log('Adding sphere object:', sphereObj);
-            addObject(sphereObj);
-        };
+      const { viewMode, setSceneState } = useScene();
 
         return (
             <>
-                {/* UI Controls */}
                 {viewMode === '2d' && <SketchToolbar />}
-                
-                {/* Test button to add objects */}
-                <button 
-                    onClick={testAddObject}
-                    className="absolute top-20 left-2 z-10 px-4 py-2 bg-green-600 text-white rounded"
-                >
-                    Add Test Cube
-                </button>
-                
-                <button 
-                    onClick={testAddSphere}
-                    className="absolute top-28 left-2 z-10 px-4 py-2 bg-red-600 text-white rounded"
-                >
-                    Add Test Sphere
-                </button>
-                
-                {/* Leva Interface */}
-                <LevaInterface onLoadInViewer={(data) => {
+                {viewMode === '3d' && <PrimitiveTools />}
+                {viewMode === '3d' && <AdvancedTools />}
+                {viewMode === '3d' && <BooleanOps />}
+                {viewMode === '3d' && <ExtrudeRevolve />}
+                {viewMode === '3d' && <ObjectManager />}
+                {viewMode === '3d' && <MaterialEditor />}
+                {viewMode === '3d' && <TransformToolbar />}
+                {viewMode === '3d' && <UndoRedoToolbar />}
+                {viewMode === '3d' && <LayerManager />}
+                {viewMode === '3d' && <GroupManager />}
+                {viewMode === '3d' && <PerformancePanel />}
+                {viewMode === '3d' && <TextureManager />}
+                {viewMode === '3d' && <OrdinalsExporter />}
+                {viewMode === '3d' && <ConstraintSystem />}
+                {viewMode === '3d' && <AnimationPanel />}
+                {viewMode === '3d' && <ExportPanel onLoadInViewer={(data) => {
+                    // Set viewer data and switch to viewer mode
                     setViewerSceneData(data);
                     setAppMode('viewer');
-                }} />
-                
-                <DebugInfo />
-                
-                {/* View mode buttons */}
+                }} />}
+                <SettingsPanel />
                 <div className="absolute top-2 left-2 z-10 flex space-x-2">
-                    <button 
-                        onClick={() => setSceneState({ viewMode: '2d' })} 
-                        className={`px-2 py-1 rounded ${viewMode === '2d' ? 'bg-blue-600' : 'bg-gray-800'} text-white`}
-                    >
-                        2D
-                    </button>
-                    <button 
-                        onClick={() => setSceneState({ viewMode: '3d' })} 
-                        className={`px-2 py-1 rounded ${viewMode === '3d' ? 'bg-blue-600' : 'bg-gray-800'} text-white`}
-                    >
-                        3D
-                    </button>
+                    <button onClick={() => setSceneState({ viewMode: '2d' })} className="px-2 py-1 bg-gray-800 text-white rounded">2D</button>
+                    <button onClick={() => setSceneState({ viewMode: '3d' })} className="px-2 py-1 bg-gray-800 text-white rounded">3D</button>
                 </div>
-
-                {/* 3D Canvas */}
-                <Canvas camera={{ position: [5, 5, 5], fov: 45 }}>
+                <Canvas dpr={1}>
+                    <CameraManager />
                     <color attach="background" args={[0.02, 0.02, 0.022]} />
-                    <ambientLight intensity={0.5} />
-                    <directionalLight position={[10, 10, 5]} intensity={1} />
-                    
-                    <Suspense fallback={null}>
+                    <Suspense>
                         {viewMode === '2d' ? (
-                            <SketchCanvas />
+                          <SketchCanvas />
                         ) : (
-                            <>
-                                {/* Test cubes to verify rendering works */}
-                                <mesh position={[3, 0, 0]}>
-                                    <boxGeometry args={[0.5, 0.5, 0.5]} />
-                                    <meshStandardMaterial color="red" />
-                                </mesh>
-                                <mesh position={[3, 0, 2]}>
-                                    <sphereGeometry args={[0.3]} />
-                                    <meshStandardMaterial color="blue" />
-                                </mesh>
-                                
-                                {/* Scene objects */}
-                                <SceneRenderer />
-                                <GridFloor />
-                                
-                                {/* Camera controls for 3D mode */}
-                                <CameraControls makeDefault />
-                            </>
+                          <>
+                            <EnvironmentLighting />
+                            <SceneRenderer />
+                            <TestBoxel />
+                            <GridFloor />
+                            {window.innerWidth < 300 ? null : <Perf position={'bottom-left'} />}
+                          </>
                         )}
                     </Suspense>
                 </Canvas>
             </>
-        );
-    };
+        )
+    }
 
     if (appMode === 'viewer') {
         return <ViewerApp 
@@ -177,11 +115,11 @@ export function App() {
                     Viewer
                 </button>
             </div>
-            <Scene />
+            <Scene/>
             <Leva hidden={window.innerWidth < 300} />
             <BoxelInfo />
         </div>
-    );
+    )
 }
 
 export default App

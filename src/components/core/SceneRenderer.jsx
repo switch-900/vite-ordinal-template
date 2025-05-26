@@ -1,5 +1,5 @@
 // filepath: src/components/core/SceneRenderer.jsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 import { GizmoControls } from '../ui/GizmoControls';
 import { Geometry, Base, Addition, Subtraction, Intersection } from '@react-three/csg';
@@ -9,28 +9,11 @@ export const SceneRenderer = () => {
   const { selectObjects, toggleObjectSelection, clearSelection } = useSceneActions();
   const meshRefs = useRef({});
 
-  // Debug effect to track object changes
-  useEffect(() => {
-    console.log('SceneRenderer useEffect - objects changed:', objects.length, objects);
-  }, [objects]);
-
-  useEffect(() => {
-    console.log('SceneRenderer mounted');
-    return () => console.log('SceneRenderer unmounted');
-  }, []);
-
-  console.log('SceneRenderer render - objects count:', objects.length);
-  console.log('SceneRenderer render - full objects array:', objects);
-  console.log('SceneRenderer render - selectedIds:', selectedIds);
-  console.log('SceneRenderer render - layers:', layers);
-
   // Filter objects based on layer visibility and group visibility
   const visibleObjects = objects.filter(obj => {
-    console.log('Filtering object:', obj.id, 'visible:', obj.visible);
     // Check layer visibility
     const layer = layers.find(l => l.id === obj.layerId);
     const layerVisible = layer ? layer.visible : true;
-    console.log('Layer visible for', obj.id, ':', layerVisible);
     
     // Check group visibility if object belongs to a group
     if (obj.groupId) {
@@ -41,9 +24,6 @@ export const SceneRenderer = () => {
     
     return layerVisible;
   });
-
-  console.log('SceneRenderer - visibleObjects count:', visibleObjects.length);
-  console.log('SceneRenderer - visibleObjects:', visibleObjects);
 
   const handleClick = (objectId, event) => {
     event.stopPropagation();
@@ -139,15 +119,7 @@ export const SceneRenderer = () => {
 
   return (
     <group onClick={handleCanvasClick}>
-      {console.log('SceneRenderer rendering - visibleObjects count:', visibleObjects.length)}
-      {visibleObjects.length === 0 && (
-        <mesh position={[0, 0.5, 0]}>
-          <boxGeometry args={[0.2, 0.2, 0.2]} />
-          <meshStandardMaterial color="yellow" />
-        </mesh>
-      )}
       {visibleObjects.map((obj) => {
-        console.log('Rendering object:', obj.id, obj);
         if (!obj.visible) return null;
         
         const isSelected = selectedIds.includes(obj.id);
