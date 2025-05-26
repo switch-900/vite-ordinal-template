@@ -1,4 +1,5 @@
-# vite-ordinal-template
+Bitmap Nexus Builder 
+Work in progress 
 
 a `Vite` + `React` + `TailwindCSS` + `R3F` + `Composer Suite` workflow for making ordinal inscriptions, which are apps inlined into a single HTML file, using recursive endpoints like `/content/` and `/r/blockinfo` from ord servers (https://github.com/ordinals/ord)
 
