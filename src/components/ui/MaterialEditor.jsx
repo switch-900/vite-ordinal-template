@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
 import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 
 export const MaterialEditor = () => {
   const { selectedObjectId, objects } = useScene();
   const { updateObject } = useSceneActions();
-  const [showPanel, setShowPanel] = useState(false);
 
   const selectedObject = selectedObjectId ? objects.find(obj => obj.id === selectedObjectId) : null;
 
@@ -19,33 +17,21 @@ export const MaterialEditor = () => {
     }
   };
 
-  if (!showPanel) {
+  if (!selectedObject) {
     return (
-      <button
-        className={`absolute right-2 top-32 px-3 py-2 rounded text-white ${
-          selectedObject ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-600 cursor-not-allowed'
-        }`}
-        onClick={() => selectedObject && setShowPanel(true)}
-        disabled={!selectedObject}
-        title={selectedObject ? 'Material Editor' : 'Select an object to edit materials'}
-      >
-        Materials
-      </button>
+      <div className="text-gray-400 text-center py-8">
+        <div className="text-4xl mb-2">🎨</div>
+        <p>Select an object to edit materials</p>
+      </div>
     );
   }
 
   const material = selectedObject?.material || {};
 
   return (
-    <div className="absolute right-2 top-32 w-72 bg-gray-900 bg-opacity-95 text-white p-4 rounded shadow">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-bold">Material Editor</h3>
-        <button
-          className="text-gray-400 hover:text-white"
-          onClick={() => setShowPanel(false)}
-        >
-          ✕
-        </button>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-white text-sm font-bold">Material Editor</h3>
       </div>
       
       <div className="mb-4">
@@ -206,12 +192,6 @@ export const MaterialEditor = () => {
         </div>
       </div>
 
-      <button
-        className="w-full px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-        onClick={() => setShowPanel(false)}
-      >
-        Close
-      </button>
     </div>
   );
 };

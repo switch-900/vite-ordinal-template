@@ -1,37 +1,15 @@
-import React, { useState } from 'react';
 import { useScene } from '../../state/sceneStore.jsx';
 
 export const SettingsPanel = () => {
   const { snapToGrid, gridSize, showGrid, setSceneState } = useScene();
-  const [showPanel, setShowPanel] = useState(false);
 
   const updateSetting = (key, value) => {
     setSceneState({ [key]: value });
   };
 
-  if (!showPanel) {
-    return (
-      <button
-        className="absolute top-2 right-2 px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700"
-        onClick={() => setShowPanel(true)}
-        title="Settings"
-      >
-        ⚙️
-      </button>
-    );
-  }
-
   return (
-    <div className="absolute top-2 right-2 w-64 bg-gray-900 bg-opacity-95 text-white p-4 rounded shadow">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-bold">Settings</h3>
-        <button
-          className="text-gray-400 hover:text-white"
-          onClick={() => setShowPanel(false)}
-        >
-          ✕
-        </button>
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-white text-sm font-bold">Settings</h3>
 
       {/* Grid Settings */}
       <div className="mb-4">
@@ -94,13 +72,6 @@ export const SettingsPanel = () => {
           <div><kbd className="bg-gray-700 px-1 rounded">Del</kbd> - Delete</div>
         </div>
       </div>
-
-      <button
-        className="w-full px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-        onClick={() => setShowPanel(false)}
-      >
-        Close
-      </button>
     </div>
   );
 };

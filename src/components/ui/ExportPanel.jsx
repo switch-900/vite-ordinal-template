@@ -6,7 +6,6 @@ import { undoRedoManager } from '../../utils/undoRedo';
 
 export const ExportPanel = ({ onLoadInViewer }) => {
   const { objects } = useScene();
-  const [showPanel, setShowPanel] = useState(false);
   const [format, setFormat] = useState('jsx');
   const [exportCode, setExportCode] = useState('');
   const [importCode, setImportCode] = useState('');

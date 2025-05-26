@@ -12,15 +12,20 @@ const tools = [
 export const SketchToolbar = () => {
   const { currentTool, setSceneState } = useScene();
   return (
-    <div className="absolute top-2 right-2 z-10 flex flex-col space-y-2 bg-gray-900 bg-opacity-80 p-2 rounded shadow">
+    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 flex items-center space-x-2 bg-gray-900 bg-opacity-90 p-2 rounded-lg shadow-lg">
+      <span className="text-white text-sm mr-2">Draw Tools:</span>
       {tools.map((tool) => (
         <button
           key={tool.name}
-          className={`px-2 py-1 rounded flex items-center space-x-2 ${currentTool === tool.name ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-200'}`}
+          className={`px-3 py-1 rounded flex items-center space-x-1 transition-colors ${
+            currentTool === tool.name 
+              ? 'bg-orange-600 text-white' 
+              : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+          }`}
           onClick={() => setSceneState({ currentTool: tool.name })}
         >
           <span>{tool.icon}</span>
-          <span>{tool.name}</span>
+          <span className="text-sm">{tool.name}</span>
         </button>
       ))}
     </div>

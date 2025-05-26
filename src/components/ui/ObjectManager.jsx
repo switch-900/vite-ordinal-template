@@ -1,5 +1,3 @@
-// filepath: src/components/ui/ObjectManager.jsx
-import React from 'react';
 import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 
 export const ObjectManager = () => {
@@ -31,12 +29,15 @@ export const ObjectManager = () => {
   };
 
   return (
-    <div className="absolute left-2 bottom-2 w-64 max-h-96 bg-gray-900 bg-opacity-90 text-white p-3 rounded shadow overflow-y-auto">
-      <h3 className="text-sm font-bold mb-2">Objects ({objects.length})</h3>
+    <div className="space-y-3">
+      <h3 className="text-white text-sm font-bold">Objects ({objects.length})</h3>
       {objects.length === 0 ? (
-        <p className="text-gray-400 text-xs">No objects in scene</p>
+        <div className="text-gray-400 text-center py-8">
+          <div className="text-4xl mb-2">📦</div>
+          <p>No objects in scene</p>
+        </div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1 max-h-96 overflow-y-auto">
           {objects.map((obj) => (
             <div
               key={obj.id}

@@ -63,18 +63,20 @@ export const PrimitiveTools = () => {
   };
 
   return (
-    <div className="absolute top-2 right-2 z-10 flex flex-col space-y-2 bg-gray-900 bg-opacity-80 p-2 rounded shadow">
-      <h3 className="text-white text-sm font-bold">Primitives</h3>
-      {primitives.map((primitive) => (
-        <button
-          key={primitive.name}
-          className="px-2 py-1 rounded flex items-center space-x-2 bg-gray-700 text-gray-200 hover:bg-orange-500"
-          onClick={() => createPrimitive(primitive.type)}
-        >
-          <span>{primitive.icon}</span>
-          <span className="text-xs">{primitive.name}</span>
-        </button>
-      ))}
+    <div className="space-y-3">
+      <h3 className="text-white text-sm font-bold">Add Primitives</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {primitives.map((primitive) => (
+          <button
+            key={primitive.name}
+            className="px-3 py-2 rounded flex flex-col items-center space-y-1 bg-gray-800 text-gray-200 hover:bg-orange-600 transition-colors"
+            onClick={() => createPrimitive(primitive.type)}
+          >
+            <span className="text-lg">{primitive.icon}</span>
+            <span className="text-xs">{primitive.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
