@@ -74,7 +74,7 @@ export function OrdinalsExporter() {
     const scene = {
       metadata: {
         version: '1.0',
-        generator: '3D Builder for Bitcoin Ordinals',
+        generator: '3D Builder for Bitmap Nexus',
         timestamp: Date.now(),
         optimization: exportSettings.optimization
       }

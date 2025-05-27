@@ -1,30 +1,29 @@
-// filepath: src/components/core/CameraManager.jsx
-import React, { useRef } from 'react';
-import { useThree } from '@react-three/fiber';
-import { OrthographicCamera, PerspectiveCamera, CameraControls } from '@react-three/drei';
-import { useScene } from '../../state/sceneStore.jsx';
+import {CameraControls} from "@react-three/drei";
+import {useEffect, useRef} from "react";
+import {useFrame} from "@react-three/fiber";
+import {useScene} from "../../state/sceneStore.jsx";
 
 export const CameraManager = () => {
-  const orthoRef = useRef();
-  const perspRef = useRef();
-  const { viewMode } = useScene();
+    const ref = useRef()
+    const { transformMode, selectedIds } = useScene();
 
-  return (
-    <>
-      <OrthographicCamera
-        ref={orthoRef}
-        makeDefault={viewMode === '2d'}
-        position={[0, 10, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        zoom={50}
-      />
-      <PerspectiveCamera
-        ref={perspRef}
-        makeDefault={viewMode === '3d'}
-        fov={45}
-        position={[5, 5, 5]}
-      />
-      {viewMode === '3d' && <CameraControls makeDefault={false} />}
-    </>
-  );
-};
+    useEffect(() => {
+        window.cam = ref.current
+
+        ref.current.moveTo(-0.0, 0.0, 0.0, true)
+        ref.current.rotateTo(0.3, 1.2, 0, true)
+        ref.current.dollyTo(9, true)
+    }, [])
+
+    useFrame(() => {
+        // TEMPORARILY DISABLED - Testing if auto-rotation causes camera reset
+        // Only rotate when not actively transforming objects
+        // if (!transformMode || selectedIds.length === 0) {
+        //     ref.current.rotate(0.002, 0, true)
+        // }
+    })
+
+    return (
+        <CameraControls makeDefault ref={ref} />
+    )
+}

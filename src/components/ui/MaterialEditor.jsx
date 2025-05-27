@@ -1,31 +1,78 @@
+import { useState, useEffect, useCallback } from 'react';
 import { useScene, useSceneActions } from '../../state/sceneStore.jsx';
 
-export const MaterialEditor = () => {
-  const { selectedObjectId, objects } = useScene();
-  const { updateObject } = useSceneActions();
+// Simple debounce function to limit state updates
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
 
-  const selectedObject = selectedObjectId ? objects.find(obj => obj.id === selectedObjectId) : null;
+export const MaterialEditor = () => {
+  const { selectedObjectId, objects, selectedIds } = useScene();
+  const { updateObject } = useSceneActions();
+  const [localMaterial, setLocalMaterial] = useState({});
+  const [localAngle, setLocalAngle] = useState(0.1);
+  
+  // Get the currently selected object
+  const selectedObject = selectedObjectId ? objects.find(obj => obj.id === selectedObjectId) : 
+                         selectedIds.length > 0 ? objects.find(obj => obj.id === selectedIds[0]) : null;
+
+  // Update local material state when selection changes
+  useEffect(() => {
+    if (selectedObject && selectedObject.material) {
+      setLocalMaterial({...selectedObject.material});
+      // Set angle from object if available
+      setLocalAngle(selectedObject.angle || 0.1);
+    } else {
+      setLocalMaterial({
+        color: '#808080',
+        metalness: 0.1,
+        roughness: 0.8,
+        opacity: 1.0,
+        emissive: '#000000',
+        emissiveIntensity: 0
+      });
+      setLocalAngle(0.1);
+    }
+  }, [selectedObject, selectedObjectId, selectedIds]);
+  
+  // Debounced update to prevent too many state changes - reduced delay for better responsiveness
+  const debouncedUpdate = useCallback(
+    debounce((id, updates) => {
+      updateObject(id, updates);
+    }, 16), // Reduced from 100ms to 16ms (60fps) for more responsive updates
+    []
+  );
+  
+  // Update angle with debouncing
+  const updateAngle = (value) => {
+    if (!selectedObject) return;
+    
+    // Update local state immediately for responsive UI
+    setLocalAngle(value);
+    
+    // Update object in store with debouncing
+    debouncedUpdate(selectedObject.id, { angle: value });
+  };
 
   const updateMaterial = (property, value) => {
-    if (selectedObject) {
-      const currentMaterial = selectedObject.material || {};
+    if (!selectedObject) return;
+    
+    // Update local state immediately for responsive UI
+    setLocalMaterial(prev => {
+      const newMaterial = { ...prev, [property]: value };
       
-      // Force refresh by creating a completely new material object
-      updateObject(selectedObject.id, {
-        material: {
-          ...currentMaterial,
-          [property]: value
-        }
-      });
+      // Only send update to store after a small delay
+      debouncedUpdate(selectedObject.id, { material: newMaterial });
       
-      // Update mesh references in real-time
-      const meshElement = document.getElementById(`mesh-${selectedObject.id}`);
-      if (meshElement) {
-        // Force a re-render by toggling a class
-        meshElement.classList.toggle('material-update');
-      }
-    }
+      return newMaterial;
+    });
   };
+  
+  // The updateAngle function is already defined above
 
   if (!selectedObject) {
     return (
@@ -152,6 +199,23 @@ export const MaterialEditor = () => {
           onChange={(e) => updateMaterial('emissiveIntensity', parseFloat(e.target.value))}
           className="w-full"
         />
+      </div>
+
+      {/* Shape Angle Modifier */}
+      <div className="mb-4">
+        <label className="block text-xs text-gray-400 mb-1">
+          Shape Angle: {localAngle.toFixed(2)}
+        </label>
+        <input
+          type="range"
+          min="0.01"
+          max="0.99"
+          step="0.01"
+          value={localAngle}
+          onChange={(e) => updateAngle(parseFloat(e.target.value))}
+          className="w-full"
+        />
+        <p className="text-xs text-gray-500 mt-1">Modifies the shape's angles and curves</p>
       </div>
 
       {/* Material Presets */}

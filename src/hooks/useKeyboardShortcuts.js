@@ -11,6 +11,8 @@ export const useKeyboardShortcuts = () => {
       if (viewMode !== '3d' || event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
         return;
       }
+      
+      console.log(`Key pressed: ${event.key}, transform mode activated`); // Debug logging
 
       switch (event.key.toLowerCase()) {
         case 'z':
@@ -41,8 +43,22 @@ export const useKeyboardShortcuts = () => {
           break;
           
         case 'escape':
-          event.preventDefault();
-          clearSelection();
+          // Only clear selection if we're not actively transforming
+          if (!event.shiftKey && !event.ctrlKey && !event.metaKey) {
+            event.preventDefault();
+            // Don't clear selection if a transform mode is active and objects are selected
+            // This prevents accidental clearing during transform operations
+            setSceneState(prev => {
+              if (prev.selectedIds.length > 0 && prev.transformMode) {
+                // Just disable transform mode instead of clearing selection
+                return { transformMode: 'translate' };
+              } else {
+                // Clear selection only if no active transform
+                clearSelection();
+                return {};
+              }
+            });
+          }
           break;
           
         case 'g':

@@ -3,6 +3,7 @@ import React from 'react';
 import { TopToolbar } from './TopToolbar.jsx';
 import { LeftSidebar } from './LeftSidebar.jsx';
 import { StatusBar } from './StatusBar.jsx';
+import { TransformIndicator } from '../ui/TransformIndicator.jsx';
 
 export const MainLayout = ({ children, onLoadInViewer }) => {
   return (
@@ -18,6 +19,7 @@ export const MainLayout = ({ children, onLoadInViewer }) => {
         {/* 3D Viewport */}
         <div className="flex-1 relative bg-gray-900">
           {children}
+          <TransformIndicator />
         </div>
       </div>
       

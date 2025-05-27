@@ -36,14 +36,14 @@ export const ViewportToolbar = () => {
               <button
                 key={mode.id}
                 onClick={() => setSceneState({ transformMode: mode.id })}
-                className={`px-3 py-1 rounded text-sm transition-colors ${
+                className={`px-4 py-2 rounded text-sm transition-colors ${
                   transformMode === mode.id
-                    ? 'bg-orange-600 text-white shadow-lg'
+                    ? 'bg-orange-600 text-white shadow-lg font-bold'
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
                 title={`${mode.name} (${mode.id === 'translate' ? 'G' : mode.id === 'rotate' ? 'R' : 'S'})`}
               >
-                <span className="mr-1">{mode.icon}</span>
+                <span className="mr-2 text-lg">{mode.icon}</span>
                 {mode.name}
               </button>
             ))}
@@ -53,7 +53,10 @@ export const ViewportToolbar = () => {
 
           {/* Clear Selection */}
           <button
-            onClick={clearSelection}
+            onClick={(e) => {
+              // Simple clear selection - no transform mode reset
+              clearSelection();
+            }}
             className="px-3 py-1 rounded text-sm bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
             title="Clear Selection (Esc)"
           >

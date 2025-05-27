@@ -1,7 +1,33 @@
+/* Gotham Regular */
 @font-face {
-  font-family: Font;
-  src: url(/content/74eed71c46430c38e056ef1bc69ad2c521293a8941d2177b52e7d447b42d5522i0)
+  font-family: 'Gotham';
+  src: url(/content/3e70186d09a3188e0d33758b4cd9773d401e4e6415be4a61146158c29363f450i1);
+  font-weight: normal;
+  font-style: normal;
+}
 
+/* Gotham Bold */
+@font-face {
+  font-family: 'Gotham';
+  src: url(/content/0fba757d15ee4a8af1a7460f2e0306795d7da86b4170203619929e02974b1a41i0);
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* Gotham Italic */
+@font-face {
+  font-family: 'Gotham';
+  src: url(/content/3e70186d09a3188e0d33758b4cd9773d401e4e6415be4a61146158c29363f450i0);
+  font-weight: normal;
+  font-style: italic;
+}
+
+/* Gotham Italic Bold */
+@font-face {
+  font-family: 'Gotham';
+  src: url(/content/3e70186d09a3188e0d33758b4cd9773d401e4e6415be4a61146158c29363f450i2);
+  font-weight: bold;
+  font-style: italic;
 }
 
 html, body, #root {
@@ -9,7 +35,7 @@ html, body, #root {
   width: 100%;
   height: 100%;
   background: #333;
-  font-family: Font,serif;
+  font-family: 'Gotham', serif;
 }
 
 .gloww {

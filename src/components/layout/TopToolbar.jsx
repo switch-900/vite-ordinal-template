@@ -36,7 +36,7 @@ export const TopToolbar = () => {
       {/* Main Menu Bar */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-900">
         <div className="flex items-center space-x-1">
-          <div className="text-orange-500 font-bold text-lg">3D Builder</div>
+          <div className="text-orange-500 font-bold text-lg">🟧 Bitmap Nexus Builder 🟧</div>
         </div>
         
         {/* View Mode Toggle */}
