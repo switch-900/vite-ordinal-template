@@ -6,12 +6,14 @@ export const ExtrudeRevolve = () => {
   const { selectedIds, objects } = useScene();
   const { addObject, selectObjects } = useSceneActions();
   
-  // ✅ Better state management
+  // ✅ Enhanced state management with preview
   const [operation, setOperation] = useState('extrude');
   const [showPanel, setShowPanel] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewObject, setPreviewObject] = useState(null);
   
-  // ✅ Parameters with proper defaults
+  // ✅ Parameters with proper defaults and extended options
   const [parameters, setParameters] = useState({
     extrudeDepth: 1.0,
     revolveAngle: 360,
@@ -20,7 +22,11 @@ export const ExtrudeRevolve = () => {
     bevelEnabled: false,
     bevelThickness: 0.1,
     bevelSize: 0.1,
-    bevelSegments: 3
+    bevelSegments: 3,
+    // Enhanced parameters
+    autoSmooth: true,
+    generateUVs: true,
+    doubleSided: false
   });
 
   // ✅ Memoized selected objects to prevent unnecessary recalculations
@@ -43,7 +49,159 @@ export const ExtrudeRevolve = () => {
     );
   }, [selectedObjects, isProcessing]);
 
-  // ✅ Update parameters with validation
+  // ✅ Calculate bounds of sketch points (moved first to avoid hoisting issues)
+  const calculateSketchBounds = useCallback((points) => {
+    if (!points || points.length === 0) {
+      return { width: 1, height: 1, centerX: 0, centerY: 0 };
+    }
+    
+    const xs = points.map(p => p[0]);
+    const ys = points.map(p => p[1]);
+    
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    
+    return {
+      width: Math.max(0.1, maxX - minX),
+      height: Math.max(0.1, maxY - minY),
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2
+    };
+  }, []);
+
+  // ✅ Enhanced geometry creation with proper THREE.js geometries
+  const createExtrudedGeometry = useCallback((sketchObj) => {
+    console.log('🏗️ Creating enhanced extruded geometry from sketch:', sketchObj.id);
+    
+    // ✅ For basic shapes, create appropriate geometry
+    if (sketchObj.geometry === 'plane') {
+      return {
+        geometry: 'box',
+        geometryArgs: [
+          sketchObj.geometryArgs?.[0] || 2,
+          parameters.extrudeDepth,
+          sketchObj.geometryArgs?.[1] || 2
+        ]
+      };
+    }
+    
+    if (sketchObj.geometry === 'circle') {
+      return {
+        geometry: 'cylinder',
+        geometryArgs: [
+          sketchObj.geometryArgs?.[0] || 1, // radius
+          sketchObj.geometryArgs?.[0] || 1, // radius (same for cylinder)
+          parameters.extrudeDepth,
+          32, // segments
+          1,  // heightSegments
+          false // openEnded
+        ]
+      };
+    }
+    
+    // ✅ For sketches with point data, create enhanced extrusion
+    if (sketchObj.sketchData && sketchObj.sketchData.points) {
+      const points = sketchObj.sketchData.points;
+      const bounds = calculateSketchBounds(points);
+      
+      // Create a more sophisticated shape based on points
+      if (points.length === 4) {
+        // Rectangular sketch
+        return {
+          geometry: 'box',
+          geometryArgs: [
+            bounds.width || 1,
+            parameters.extrudeDepth,
+            bounds.height || 1
+          ]
+        };
+      } else if (points.length > 4) {
+        // Complex shape - approximate with rounded cylinder
+        const avgRadius = Math.max(bounds.width, bounds.height) / 2;
+        return {
+          geometry: 'cylinder',
+          geometryArgs: [
+            avgRadius,
+            avgRadius,
+            parameters.extrudeDepth,
+            Math.min(32, Math.max(6, points.length)),
+            1,
+            false
+          ]
+        };
+      }
+    }
+    
+    // ✅ Enhanced fallback geometry
+    return {
+      geometry: 'box',
+      geometryArgs: [2, parameters.extrudeDepth, 2]
+    };
+  }, [parameters.extrudeDepth, calculateSketchBounds]);
+
+  // ✅ Enhanced revolve geometry with better profiles
+  const createRevolvedGeometry = useCallback((sketchObj) => {
+    console.log('🌀 Creating enhanced revolved geometry from sketch:', sketchObj.id);
+    
+    // ✅ For basic shapes, create appropriate revolution
+    if (sketchObj.geometry === 'plane') {
+      return {
+        geometry: 'cylinder',
+        geometryArgs: [
+          (sketchObj.geometryArgs?.[0] || 2) / 2, // radiusTop
+          (sketchObj.geometryArgs?.[0] || 2) / 2, // radiusBottom  
+          sketchObj.geometryArgs?.[1] || 2,       // height
+          parameters.segments,
+          1, // heightSegments
+          parameters.revolveAngle < 360, // openEnded if not full revolution
+          0, // thetaStart
+          (parameters.revolveAngle * Math.PI) / 180 // thetaLength
+        ]
+      };
+    }
+    
+    if (sketchObj.geometry === 'circle') {
+      // Revolving a circle creates a torus
+      return {
+        geometry: 'torus',
+        geometryArgs: [
+          (sketchObj.geometryArgs?.[0] || 1) * 1.5, // radius
+          sketchObj.geometryArgs?.[0] || 1,         // tube
+          16, // radialSegments
+          parameters.segments, // tubularSegments
+          (parameters.revolveAngle * Math.PI) / 180 // arc
+        ]
+      };
+    }
+    
+    // ✅ For sketches, create cylinder based on bounds
+    if (sketchObj.sketchData && sketchObj.sketchData.points) {
+      const bounds = calculateSketchBounds(sketchObj.sketchData.points);
+      return {
+        geometry: 'cylinder',
+        geometryArgs: [
+          Math.max(0.1, bounds.width / 2 || 0.5),
+          Math.max(0.1, bounds.width / 2 || 0.5),
+          bounds.height || 1,
+          parameters.segments,
+          1,
+          parameters.revolveAngle < 360, // openEnded if not full revolution
+          0,
+          (parameters.revolveAngle * Math.PI) / 180
+        ]
+      };
+    }
+    
+    // ✅ Enhanced fallback geometry
+    return {
+      geometry: 'cylinder',
+      geometryArgs: [0.5, 0.5, 2, parameters.segments, 1, false, 0, (parameters.revolveAngle * Math.PI) / 180]
+    };
+  }, [parameters.segments, parameters.revolveAngle, calculateSketchBounds]);
+
+  // ✅ Update parameters with validation and preview generation
   const updateParameter = useCallback((key, value) => {
     setParameters(prev => {
       const newParams = { ...prev };
@@ -75,115 +233,58 @@ export const ExtrudeRevolve = () => {
       
       return newParams;
     });
-  }, []);
+    
+    // Generate preview when parameters change
+    if (showPreview && selectedObjects.length === 1) {
+      generatePreview();
+    }
+  }, [showPreview, selectedObjects]);
 
-  // ✅ Create extruded geometry from sketch
-  const createExtrudedGeometry = useCallback((sketchObj) => {
-    console.log('🏗️ Creating extruded geometry from sketch:', sketchObj.id);
+  // ✅ Generate preview of the 3D operation
+  const generatePreview = useCallback(() => {
+    if (!canExtrude || selectedObjects.length !== 1) return;
     
-    // ✅ For basic shapes, create appropriate geometry
-    if (sketchObj.geometry === 'plane') {
-      return {
-        geometry: 'box',
-        geometryArgs: [
-          sketchObj.geometryArgs?.[0] || 2,
-          parameters.extrudeDepth,
-          sketchObj.geometryArgs?.[1] || 2
-        ]
-      };
-    }
-    
-    // ✅ For sketches with point data, create custom extrusion
-    if (sketchObj.sketchData && sketchObj.sketchData.points) {
-      const points = sketchObj.sketchData.points;
-      
-      // ✅ Simple extrusion - convert 2D shape to 3D box for now
-      // In a real implementation, you'd use THREE.ExtrudeGeometry
-      const bounds = calculateSketchBounds(points);
-      return {
-        geometry: 'box',
-        geometryArgs: [
-          bounds.width || 1,
-          parameters.extrudeDepth,
-          bounds.height || 1
-        ]
-      };
-    }
-    
-    // ✅ Fallback geometry
-    return {
-      geometry: 'box',
-      geometryArgs: [2, parameters.extrudeDepth, 2]
-    };
-  }, [parameters.extrudeDepth]);
+    const sketchObj = selectedObjects[0];
+    const geometryData = operation === 'extrude' 
+      ? createExtrudedGeometry(sketchObj)
+      : createRevolvedGeometry(sketchObj);
 
-  // ✅ Create revolved geometry from sketch
-  const createRevolvedGeometry = useCallback((sketchObj) => {
-    console.log('🌀 Creating revolved geometry from sketch:', sketchObj.id);
-    
-    // ✅ For basic shapes, create appropriate revolution
-    if (sketchObj.geometry === 'plane') {
-      return {
-        geometry: 'cylinder',
-        geometryArgs: [
-          (sketchObj.geometryArgs?.[0] || 2) / 2, // radiusTop
-          (sketchObj.geometryArgs?.[0] || 2) / 2, // radiusBottom  
-          sketchObj.geometryArgs?.[1] || 2,       // height
-          parameters.segments,
-          1, // heightSegments
-          false, // openEnded
-          0, // thetaStart
-          (parameters.revolveAngle * Math.PI) / 180 // thetaLength
-        ]
-      };
-    }
-    
-    // ✅ For sketches, create cylinder based on bounds
-    if (sketchObj.sketchData && sketchObj.sketchData.points) {
-      const bounds = calculateSketchBounds(sketchObj.sketchData.points);
-      return {
-        geometry: 'cylinder',
-        geometryArgs: [
-          Math.max(0.1, bounds.width / 2 || 0.5),
-          Math.max(0.1, bounds.width / 2 || 0.5),
-          bounds.height || 1,
-          parameters.segments,
-          1,
-          parameters.revolveAngle < 360, // openEnded if not full revolution
-          0,
-          (parameters.revolveAngle * Math.PI) / 180
-        ]
-      };
-    }
-    
-    // ✅ Fallback geometry
-    return {
-      geometry: 'cylinder',
-      geometryArgs: [0.5, 0.5, 2, parameters.segments]
+    const preview = {
+      ...geometryData,
+      position: [...sketchObj.position],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      material: {
+        color: operation === 'extrude' ? '#3498db' : '#e67e22',
+        metalness: 0.1,
+        roughness: 0.8,
+        transparent: true,
+        opacity: 0.6,
+        wireframe: false
+      }
     };
-  }, [parameters.segments, parameters.revolveAngle]);
 
-  // ✅ Calculate bounds of sketch points
-  const calculateSketchBounds = useCallback((points) => {
-    if (!points || points.length === 0) {
-      return { width: 1, height: 1, centerX: 0, centerY: 0 };
+    setPreviewObject(preview);
+  }, [canExtrude, selectedObjects, operation, createExtrudedGeometry, createRevolvedGeometry]);
+
+  // ✅ Toggle preview mode
+  const togglePreview = useCallback(() => {
+    const newShowPreview = !showPreview;
+    setShowPreview(newShowPreview);
+    
+    if (newShowPreview) {
+      generatePreview();
+    } else {
+      setPreviewObject(null);
     }
-    
-    const xs = points.map(p => p[0]);
-    const ys = points.map(p => p[1]);
-    
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    
-    return {
-      width: Math.max(0.1, maxX - minX),
-      height: Math.max(0.1, maxY - minY),
-      centerX: (minX + maxX) / 2,
-      centerY: (minY + maxY) / 2
-    };
-  }, []);
+  }, [showPreview, generatePreview]);
+
+
+
+  // ✅ Enhanced revolve geometry with better profiles
+
+
+
 
   // ✅ Perform the operation with better error handling
   const performOperation = useCallback(async () => {
@@ -338,32 +439,61 @@ export const ExtrudeRevolve = () => {
         </div>
       </div>
 
-      {/* ✅ Parameters based on operation */}
+      {/* ✅ Enhanced parameters with preview controls */}
       <div className="mb-4 space-y-3">
-        <h4 className="text-sm font-medium text-gray-400">Parameters:</h4>
+        <div className="flex justify-between items-center">
+          <h4 className="text-sm font-medium text-gray-400">Parameters:</h4>
+          <button
+            onClick={togglePreview}
+            className={`px-3 py-1 text-xs rounded transition-colors ${
+              showPreview 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
+          </button>
+        </div>
         
         {operation === 'extrude' && (
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">
-              Depth: {parameters.extrudeDepth.toFixed(2)}
-            </label>
-            <input
-              type="range"
-              min="0.01"
-              max="5"
-              step="0.01"
-              value={parameters.extrudeDepth}
-              onChange={(e) => updateParameter('extrudeDepth', e.target.value)}
-              className="w-full"
-            />
-          </div>
+          <>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">
+                Depth: {parameters.extrudeDepth.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0.01"
+                max="5"
+                step="0.01"
+                value={parameters.extrudeDepth}
+                onChange={(e) => updateParameter('extrudeDepth', e.target.value)}
+                className="w-full accent-green-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">
+                Steps: {parameters.steps}
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={parameters.steps}
+                onChange={(e) => updateParameter('steps', e.target.value)}
+                className="w-full accent-green-500"
+              />
+            </div>
+          </>
         )}
 
         {operation === 'revolve' && (
           <>
             <div>
               <label className="block text-xs text-gray-400 mb-1">
-                Angle: {parameters.revolveAngle}°
+                Angle: {parameters.revolveAngle}° {parameters.revolveAngle < 360 ? '(Partial)' : '(Full)'}
               </label>
               <input
                 type="range"
@@ -372,12 +502,12 @@ export const ExtrudeRevolve = () => {
                 step="10"
                 value={parameters.revolveAngle}
                 onChange={(e) => updateParameter('revolveAngle', e.target.value)}
-                className="w-full"
+                className="w-full accent-orange-500"
               />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">
-                Segments: {parameters.segments}
+                Quality: {parameters.segments} segments
               </label>
               <input
                 type="range"
@@ -386,11 +516,33 @@ export const ExtrudeRevolve = () => {
                 step="1"
                 value={parameters.segments}
                 onChange={(e) => updateParameter('segments', e.target.value)}
-                className="w-full"
+                className="w-full accent-orange-500"
               />
             </div>
           </>
         )}
+
+        {/* Enhanced options */}
+        <div className="border-t border-gray-700 pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-gray-400">Auto Smooth</label>
+            <input
+              type="checkbox"
+              checked={parameters.autoSmooth}
+              onChange={(e) => updateParameter('autoSmooth', e.target.checked)}
+              className="accent-blue-500"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-gray-400">Double Sided</label>
+            <input
+              type="checkbox"
+              checked={parameters.doubleSided}
+              onChange={(e) => updateParameter('doubleSided', e.target.checked)}
+              className="accent-blue-500"
+            />
+          </div>
+        </div>
       </div>
 
       {/* ✅ Action buttons */}
@@ -424,15 +576,40 @@ export const ExtrudeRevolve = () => {
         </button>
       </div>
 
-      {/* ✅ Help text */}
-      <div className="mt-4 p-2 bg-green-900 bg-opacity-50 rounded text-xs text-green-200">
-        <div className="font-medium mb-1">💡 3D Generation Tips:</div>
-        <ul className="space-y-1">
-          <li>• Select a 2D sketch or shape first</li>
-          <li>• Extrude pushes the shape along its normal</li>
-          <li>• Revolve spins the shape around an axis</li>
-          <li>• Adjust parameters before generating</li>
-        </ul>
+      {/* ✅ Enhanced help with workflow guidance */}
+      <div className="mt-4 p-3 bg-gradient-to-r from-blue-900 to-green-900 bg-opacity-50 rounded text-xs">
+        <div className="font-medium mb-2 flex items-center">
+          <span className="mr-2">💡</span>
+          CAD Workflow Guide
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-start">
+            <span className="text-blue-300 mr-2 font-bold">1.</span>
+            <span className="text-blue-200">Sketch in 2D mode with drawing tools</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-green-300 mr-2 font-bold">2.</span>
+            <span className="text-green-200">Select your 2D sketch</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-orange-300 mr-2 font-bold">3.</span>
+            <span className="text-orange-200">Choose Extrude/Revolve & adjust parameters</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-purple-300 mr-2 font-bold">4.</span>
+            <span className="text-purple-200">Preview and generate 3D model</span>
+          </div>
+        </div>
+        
+        <div className="mt-3 pt-2 border-t border-gray-600">
+          <div className="font-medium mb-1">✨ Pro Tips:</div>
+          <ul className="space-y-1 text-gray-300">
+            <li>• Use Split View to see 2D and 3D simultaneously</li>
+            <li>• Enable Preview to see changes in real-time</li>
+            <li>• {operation === 'extrude' ? 'Extrude pushes shapes outward' : 'Revolve spins shapes around center'}</li>
+            <li>• Higher quality = more segments but slower performance</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

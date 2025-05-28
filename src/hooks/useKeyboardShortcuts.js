@@ -101,7 +101,32 @@ export const useKeyboardShortcuts = () => {
 
         case '2':
           event.preventDefault();
-          setSceneState({ viewMode: '2d' });
+          setSceneState({ viewMode: '2d', view2DMode: 'front' });
+          break;
+
+        case '3':
+          event.preventDefault();
+          setSceneState({ viewMode: '2d', view2DMode: 'top' });
+          break;
+
+        case '4':
+          event.preventDefault();
+          setSceneState({ viewMode: '2d', view2DMode: 'right' });
+          break;
+
+        case '5':
+          event.preventDefault();
+          setSceneState({ viewMode: '2d', view2DMode: 'left' });
+          break;
+
+        case '6':
+          event.preventDefault();
+          setSceneState({ viewMode: '2d', view2DMode: 'back' });
+          break;
+
+        case '7':
+          event.preventDefault();
+          setSceneState({ viewMode: '2d', view2DMode: 'bottom' });
           break;
 
         default:

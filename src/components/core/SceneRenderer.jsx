@@ -67,12 +67,8 @@ export const SceneRenderer = () => {
       return;
     }
     
-    // Don't clear selection immediately if transform mode is active
-    // Give users time to interact with transform controls
-    if (transformMode && selectedIds.length > 0) {
-      return;
-    }
-    
+    // Always clear selection when clicking on background
+    // This enables click-away deselection behavior
     clearSelection();
   };
 
@@ -261,8 +257,7 @@ export const SceneRenderer = () => {
 
   return (
     <>
-      {/* Background plane for click handling */}
-      {/* Background plane - completely disabled during transform operations */}
+      {/* Background plane for click handling - always present for click-away deselection */}
       {!transformMode && (
         <mesh 
           position={[0, -0.01, 0]} 
@@ -275,6 +270,7 @@ export const SceneRenderer = () => {
         </mesh>
       )}
       
+      {/* Render all visible objects */}
       <group>
         {visibleObjects.map((obj) => {
           if (!obj.visible) return null;

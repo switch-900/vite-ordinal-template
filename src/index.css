@@ -41,3 +41,35 @@ html, body, #root {
 .gloww {
   text-shadow: 0 0 55px #ff9900, 0 0 32px rgba(255, 119, 0, 0.7), 0 0 7px #000, 0 0 16px #000, 0 0 3px #bf00ff;
 }
+
+/* Orange slider styles for Bitmon controls */
+.slider-orange::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ff6600;
+  cursor: pointer;
+  border: 2px solid #ff8833;
+  box-shadow: 0 0 4px rgba(255, 102, 0, 0.5);
+}
+
+.slider-orange::-webkit-slider-thumb:hover {
+  background: #ff8833;
+  box-shadow: 0 0 8px rgba(255, 102, 0, 0.8);
+}
+
+.slider-orange::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #ff6600;
+  cursor: pointer;
+  border: 2px solid #ff8833;
+  box-shadow: 0 0 4px rgba(255, 102, 0, 0.5);
+}
+
+.slider-orange::-moz-range-thumb:hover {
+  background: #ff8833;
+  box-shadow: 0 0 8px rgba(255, 102, 0, 0.8);
+}

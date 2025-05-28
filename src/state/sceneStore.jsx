@@ -10,11 +10,22 @@ const initialState = {
   selectedIds: [],
   selectedObjectId: null,
   viewMode: '3d',
-  currentTool: 'Line',
+  view2DMode: 'front', // front, back, left, right, top, bottom
+  currentTool: 'Select', // Start with Select tool, proper case
   transformMode: 'translate',
   snapToGrid: true,
   gridSize: 0.5,
   showGrid: true,
+  snapSettings: {
+    enabled: true,
+    gridSnap: true,
+    objectSnap: true,
+    vertexSnap: true,
+    edgeSnap: true,
+    gridSize: 0.5,
+    snapDistance: 0.25,
+    showSnapIndicators: true
+  },
   layers: [
     {
       id: 'default',

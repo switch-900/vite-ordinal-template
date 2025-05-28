@@ -1,0 +1,7 @@
+Things to do. 
+Add import from ordinals 
+Inscriber textures 
+Fix 2d drawing
+Fix grid / snap to grid
+fix mouse, orbit on cursor
+the switching between2d and 3d view should be seemless, the idea is that you can add forinstace a 2d drawing and then extrude thisin to a 3d view, or draw on a face and extrude / remove a part of the 3d. 
